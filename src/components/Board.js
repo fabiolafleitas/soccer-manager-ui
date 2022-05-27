@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import styles from './Board.module.css';
 
-export default function Board(props){
-  const {selectedItem} = props;
+export default function Board(props) {
+  const { selectedItem } = props;
 
   const [ocuppiedPlaces, setOcuppiedPlaces] = useState([]);
 
@@ -10,15 +10,16 @@ export default function Board(props){
   const places = [...Array(2400).keys()].map(place => place + 1);
 
   const handleBoardClick = (positionIndex) => {
-    if(selectedItem === '') {
+    if (selectedItem === '') {
       return;
     }
-    
+
     const element = {
       id: positionIndex,
       type: selectedItem === 'ball' ? 'ball' : 'player',
       attribute: {
-        team: selectedItem  
+        team: selectedItem,
+        number: 2
       },
       index: positionIndex,
       position: {
@@ -26,7 +27,7 @@ export default function Board(props){
         y: positionIndex % 60
       }
     }
-    setOcuppiedPlaces(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);    
+    setOcuppiedPlaces(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);
   }
 
   const isItemOnSpace = (positionIndex) => {
@@ -44,14 +45,28 @@ export default function Board(props){
     return `${styles.playerOnSpot} ${styles[item.attribute.team]}`;
   }
 
+  const getItemNumber = (positionIndex) => {
+    const item = ocuppiedPlaces.find(element => {
+      return element.index === positionIndex;
+    });
+
+    if (item.type === 'ball') {
+      return;
+    }
+
+    return `${item.attribute.number}`;
+  }
+
   return (
     <div className={styles.board}>
-      {places.map(key => 
+      {places.map(key =>
         <button key={key} className={styles.space}
-                onClick={() => handleBoardClick(key)}>
-                { isItemOnSpace(key) && 
-                  <div className={getItemClass(key)}></div>
-                }
+          onClick={() => handleBoardClick(key)}>
+          {isItemOnSpace(key) &&
+            <div className={getItemClass(key)}>
+              <div className={styles.playerOnSpotNumber}>{getItemNumber(key)}</div>
+            </div>
+          }
         </button>
       )}
     </div>
