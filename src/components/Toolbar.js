@@ -10,6 +10,10 @@ export default function Toolbar(props) {
     props.onItemClick(item);
   }
 
+  const handleResetClick = () => {
+    props.onResetClick();
+  }
+
   return (
     <div className={styles.toolbar}>
       <ul>
@@ -32,6 +36,12 @@ export default function Toolbar(props) {
           <button className={`${styles.toolbarBtn} ${selectedItem === 'ball' ? `${styles.active} ${styles.activeBall}` : ''}`}
                   onClick={() => handleItemSelection('ball')}>
             <img src={ball} alt="soccer ball" />
+          </button>
+        </li>
+        <li>
+          <button className={styles.toolbarBtn}
+                  onClick={handleResetClick}>
+            <Icon type="reset" color="black" />
           </button>
         </li>
       </ul>

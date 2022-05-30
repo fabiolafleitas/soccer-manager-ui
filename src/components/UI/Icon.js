@@ -1,6 +1,7 @@
 import React from 'react';
 import CircleSVG from './CircleSVG';
 import BallSVG from './BallSVG';
+import ResetSVG from './ResetSVG';
 
 export default function Icon({size='32', color='blue', type='circle'}){
 
@@ -22,6 +23,9 @@ export default function Icon({size='32', color='blue', type='circle'}){
   }
   if(type === 'ball'){
     icon = <BallSVG size={size} color={hexColor} />
+  }
+  if(type === 'reset'){
+    icon = <ResetSVG size={size} color={hexColor}/>
   }
 
   return (

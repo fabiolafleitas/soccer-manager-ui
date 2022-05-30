@@ -1,17 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Board.module.css';
 
+const setBoardDimensions = (rows, columns) => {
+  return [...Array(rows*columns).keys()].map(index => index + 1);
+}
+
 export default function Board(props) {
-  const { selectedItem } = props;
+  const { selectedItem, isReset, onResetRestart } = props;
 
-  const [ocuppiedPlaces, setOcuppiedPlaces] = useState([]);
-
+  const [elements, setElements] = useState([]);
   /* Fixed board size 60 columns and 40 rows */
-  const places = [...Array(2400).keys()].map(place => place + 1);
+  const [board] = useState(() => setBoardDimensions(40,60));
+
+  useEffect(() => {
+    if(isReset){
+      setElements([]);
+      onResetRestart();
+    }
+  }, [isReset, onResetRestart]);
+
+  //  const places = [...Array(2400).keys()].map(place => place + 1);
+  
+
+  const totalElementsOnBoard = {
+      team1: elements.length > 0 ? elements.filter(element => element.attribute.team === 'team1').length : 0,
+      team2: elements.length > 0 ? elements.filter(element => element.attribute.team === 'team2').length : 0,
+      ball: elements.length > 0 ? elements.filter(element => element.attribute.team === 'ball').length : 0
+  };
 
   const handleBoardClick = (positionIndex) => {
     if (selectedItem === '') {
       return;
+    }
+
+    if (selectedItem === 'ball'){
+      if (totalElementsOnBoard[selectedItem] > 0){
+        return;
+      }
+    } else {
+      if (totalElementsOnBoard[selectedItem] === 5){
+        return;
+      }
     }
 
     const element = {
@@ -19,7 +48,7 @@ export default function Board(props) {
       type: selectedItem === 'ball' ? 'ball' : 'player',
       attribute: {
         team: selectedItem,
-        number: 2
+        number: totalElementsOnBoard[selectedItem] + 1
       },
       index: positionIndex,
       position: {
@@ -27,44 +56,46 @@ export default function Board(props) {
         y: positionIndex % 60
       }
     }
-    setOcuppiedPlaces(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);
+    setElements(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);
   }
 
-  const isItemOnSpace = (positionIndex) => {
-    const item = ocuppiedPlaces.find(element => {
+  const isElementOnSpot = (positionIndex) => {
+    const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
-    return !!item;
+    return !!elementOnBoard;
   }
 
-  const getItemClass = (positionIndex) => {
-    const item = ocuppiedPlaces.find(element => {
-      return element.index === positionIndex;
-    });
-
-    return `${styles.playerOnSpot} ${styles[item.attribute.team]}`;
-  }
-
-  const getItemNumber = (positionIndex) => {
-    const item = ocuppiedPlaces.find(element => {
+  const getElementClass = (positionIndex) => {
+    const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
 
-    if (item.type === 'ball') {
+    return `${styles.player} ${styles[elementOnBoard.attribute.team]}`;
+  }
+
+  const getElementNumber = (positionIndex) => {
+    const elementOnBoard = elements.find(element => {
+      return element.index === positionIndex;
+    });
+
+    if (elementOnBoard.type === 'ball') {
       return;
     }
 
-    return `${item.attribute.number}`;
+    return `${elementOnBoard.attribute.number}`;
   }
 
   return (
     <div className={styles.board}>
-      {places.map(key =>
-        <button key={key} className={styles.space}
+      {board.map(key =>
+        <button key={key} className={styles.spot}
           onClick={() => handleBoardClick(key)}>
-          {isItemOnSpace(key) &&
-            <div className={getItemClass(key)}>
-              <div className={styles.playerOnSpotNumber}>{getItemNumber(key)}</div>
+          { isElementOnSpot(key) &&
+            <div className={getElementClass(key)}>
+              <div className={styles.playerNumber}>
+                {getElementNumber(key)}
+              </div>
             </div>
           }
         </button>
