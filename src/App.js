@@ -7,6 +7,13 @@ import './App.css';
 function App() {
   const [selectedItem, setSelectedItem] = useState('');
   const [isResetSelected, setIsResetSelected] = useState(false);
+  const [tacticGroup, setTacticGroup] = useState({
+    name: 'Untitled',
+    tactics: [{
+      sequence: 0,
+      elements: []
+    }]
+  });
 
   const handleItemSelection = (item) => {
     setSelectedItem(item);
@@ -20,6 +27,21 @@ function App() {
     setIsResetSelected(false);
   }
 
+  const handleElementAdd = (sequence, element) => {
+    setTacticGroup({
+      ...tacticGroup,
+      tactics: tacticGroup.tactics.map(tactic => {
+        if(tactic.sequence !== sequence){
+          return tactic
+        }
+        return {
+          ...tactic,
+          elements: [...tactic.elements, element] 
+        }
+      })
+    })
+  }
+
   return (
     <div className="main-container">
       <Toolbar selectedItem={selectedItem} 
@@ -27,7 +49,10 @@ function App() {
               onResetClick={handleIsResetClick} />
       <div className="field-container">
         <Field />
-        <Board selectedItem={selectedItem} isReset={isResetSelected} 
+        <Board selectedItem={selectedItem} 
+              isReset={isResetSelected}
+              tacticGroup={tacticGroup}
+              onElementAdd={handleElementAdd} 
               onResetRestart={handleIsResetRestart} />
       </div>
     </div>

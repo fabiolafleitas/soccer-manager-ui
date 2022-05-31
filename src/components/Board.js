@@ -6,11 +6,16 @@ const setBoardDimensions = (rows, columns) => {
 }
 
 export default function Board(props) {
-  const { selectedItem, isReset, onResetRestart } = props;
+  const { selectedItem, isReset, onResetRestart, tacticGroup } = props;
 
   const [elements, setElements] = useState([]);
   /* Fixed board size 60 columns and 40 rows */
   const [board] = useState(() => setBoardDimensions(40,60));
+
+  useEffect(() => {
+    console.log(tacticGroup);
+    setElements(tacticGroup.tactics[0].elements);
+  }, [tacticGroup])
 
   useEffect(() => {
     if(isReset){
@@ -56,7 +61,8 @@ export default function Board(props) {
         y: positionIndex % 60
       }
     }
-    setElements(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);
+    // setElements(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);
+    props.onElementAdd(0, element);
   }
 
   const isElementOnSpot = (positionIndex) => {
