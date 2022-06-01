@@ -2,6 +2,8 @@ import React from 'react';
 import CircleSVG from './CircleSVG';
 import BallSVG from './BallSVG';
 import ResetSVG from './ResetSVG';
+import SaveSVG from './SaveSVG'
+import ListSVG from './ListSVG';
 
 export default function Icon({size='32', color='blue', type='circle'}){
 
@@ -26,6 +28,12 @@ export default function Icon({size='32', color='blue', type='circle'}){
   }
   if(type === 'reset'){
     icon = <ResetSVG size={size} color={hexColor}/>
+  }
+  if(type === 'save'){
+    icon = <SaveSVG size={size} color={hexColor}/>
+  }
+  if(type === 'list'){
+    icon = <ListSVG size={size} color={hexColor}/>
   }
 
   return (

@@ -44,7 +44,8 @@ function App() {
 
   return (
     <div className="main-container">
-      <Toolbar selectedItem={selectedItem} 
+      <Toolbar selectedItem={selectedItem}
+              tacticGroupName={tacticGroup.name}
               onItemClick={handleItemSelection} 
               onResetClick={handleIsResetClick} />
       <div className="field-container">

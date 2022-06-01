@@ -5,10 +5,38 @@ const setBoardDimensions = (rows, columns) => {
   return [...Array(rows*columns).keys()].map(index => index + 1);
 }
 
+const getXY = (positionIndex) => {
+  const y = Math.floor(positionIndex/60)+1;
+  const x = positionIndex - ((y-1)*60);
+  return [x,y];
+}
+
+const getPostionFromXY = (x,y) => {
+  return x + ((y-1)*60);
+}
+
+const calculateElementPositions = (positionIndex) => {
+  const [x, y] = getXY(positionIndex);
+  console.log(x, y);
+
+  return [
+    positionIndex,
+    getPostionFromXY(x-1,y-1), //up left
+    getPostionFromXY(x,y-1), //up
+    getPostionFromXY(x+1,y-1), //up right
+    getPostionFromXY(x-1,y), //left
+    getPostionFromXY(x+1,y), //righ
+    getPostionFromXY(x-1,y+1), //down left
+    getPostionFromXY(x,y+1), //down
+    getPostionFromXY(x+1,y+1)//down right
+  ];
+}
+
 export default function Board(props) {
   const { selectedItem, isReset, onResetRestart, tacticGroup } = props;
 
   const [elements, setElements] = useState([]);
+  const [elementsPosition, setElementsPosition] = useState([]);
   /* Fixed board size 60 columns and 40 rows */
   const [board] = useState(() => setBoardDimensions(40,60));
 
@@ -22,10 +50,7 @@ export default function Board(props) {
       setElements([]);
       onResetRestart();
     }
-  }, [isReset, onResetRestart]);
-
-  //  const places = [...Array(2400).keys()].map(place => place + 1);
-  
+  }, [isReset, onResetRestart]);  
 
   const totalElementsOnBoard = {
       team1: elements.length > 0 ? elements.filter(element => element.attribute.team === 'team1').length : 0,
@@ -47,6 +72,13 @@ export default function Board(props) {
         return;
       }
     }
+
+    if(elementsPosition.includes(positionIndex)){
+      return;
+    }
+
+    const elementSpace = calculateElementPositions(positionIndex);
+    setElementsPosition([...elementsPosition, ...elementSpace]);
 
     const element = {
       id: positionIndex,
