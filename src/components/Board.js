@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styles from './Board.module.css';
 
 const setBoardDimensions = (rows, columns) => {
@@ -17,7 +17,6 @@ const getPostionFromXY = (x,y) => {
 
 const calculateElementPositions = (positionIndex) => {
   const [x, y] = getXY(positionIndex);
-  console.log(x, y);
 
   return [
     positionIndex,
@@ -33,17 +32,16 @@ const calculateElementPositions = (positionIndex) => {
 }
 
 export default function Board(props) {
-  const { selectedItem, isReset, onResetRestart, tacticGroup } = props;
+  const { selectedItem, isReset, onResetRestart, tacticGroup, tacticSequence } = props;
 
   const [elements, setElements] = useState([]);
   const [elementsPosition, setElementsPosition] = useState([]);
   /* Fixed board size 60 columns and 40 rows */
-  const [board] = useState(() => setBoardDimensions(40,60));
+  const board = useMemo(() => setBoardDimensions(40,60),[]);
 
   useEffect(() => {
-    console.log(tacticGroup);
-    setElements(tacticGroup.tactics[0].elements);
-  }, [tacticGroup])
+    setElements(tacticGroup.tactics[tacticSequence].elements);
+  }, [tacticGroup,tacticSequence]);
 
   useEffect(() => {
     if(isReset){
@@ -53,9 +51,9 @@ export default function Board(props) {
   }, [isReset, onResetRestart]);  
 
   const totalElementsOnBoard = {
-      team1: elements.length > 0 ? elements.filter(element => element.attribute.team === 'team1').length : 0,
-      team2: elements.length > 0 ? elements.filter(element => element.attribute.team === 'team2').length : 0,
-      ball: elements.length > 0 ? elements.filter(element => element.attribute.team === 'ball').length : 0
+      team1: elements.length > 0 ? elements.filter(element => element.attributes.team === 'team1').length : 0,
+      team2: elements.length > 0 ? elements.filter(element => element.attributes.team === 'team2').length : 0,
+      ball: elements.length > 0 ? elements.filter(element => element.attributes.team === 'ball').length : 0
   };
 
   const handleBoardClick = (positionIndex) => {
@@ -83,7 +81,7 @@ export default function Board(props) {
     const element = {
       id: positionIndex,
       type: selectedItem === 'ball' ? 'ball' : 'player',
-      attribute: {
+      attributes: {
         team: selectedItem,
         number: totalElementsOnBoard[selectedItem] + 1
       },
@@ -94,7 +92,7 @@ export default function Board(props) {
       }
     }
     // setElements(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);
-    props.onElementAdd(0, element);
+    props.onElementAdd(tacticSequence, element);
   }
 
   const isElementOnSpot = (positionIndex) => {
@@ -109,7 +107,7 @@ export default function Board(props) {
       return element.index === positionIndex;
     });
 
-    return `${styles.player} ${styles[elementOnBoard.attribute.team]}`;
+    return `${styles.player} ${styles[elementOnBoard.attributes.team]}`;
   }
 
   const getElementNumber = (positionIndex) => {
@@ -121,7 +119,7 @@ export default function Board(props) {
       return;
     }
 
-    return `${elementOnBoard.attribute.number}`;
+    return `${elementOnBoard.attributes.number}`;
   }
 
   return (

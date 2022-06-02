@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Icon from './UI/Icon';
 import ball from '../assets/images/ball.png';
 import styles from './Toolbar.module.css';
@@ -7,12 +7,33 @@ export default function Toolbar(props) {
   const {selectedItem, tacticGroupName} = props;
   const [savedTactics, setSaveTactics] = useState([]);
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const fetchTactics = [
+        {
+          name: "Group 1",
+          id: "A1"
+        },
+        {
+          name: "Group 2",
+          id: "A2"
+        }
+      ];
+      setSaveTactics(fetchTactics);
+    }, 2000);
+    return () => { clearTimeout(timeoutId) };
+  }, []);
+
   const handleItemSelection = (item) => {
     props.onItemClick(item);
   }
 
   const handleResetClick = () => {
     props.onResetClick();
+  }
+
+  const handleTacticClick = (tacticId) => {
+    props.onTacticClick(tacticId);
   }
 
   return (
@@ -65,9 +86,16 @@ export default function Toolbar(props) {
               <Icon type="list" color="black" />
             </button>
             <div className={styles.dropdownContent}>
-              <button className={styles.toolbarBtn}>Saved Tactic 1</button>
-              <button className={styles.toolbarBtn}>Saved Tactic 2</button>
-              <button className={styles.toolbarBtn}>Saved Tactic 3</button>
+              <button className={styles.toolbarBtn}
+                onClick={() => handleTacticClick()}>
+                  <i>Untitled</i>
+              </button>
+              {savedTactics.map(tactic => (
+                <button key={tactic.id} className={styles.toolbarBtn}
+                        onClick={() => handleTacticClick(tactic.id)}>
+                  {tactic.name}
+                </button>
+              ))}
             </div>
           </div>
         </li>

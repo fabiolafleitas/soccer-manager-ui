@@ -4,6 +4,7 @@ import BallSVG from './BallSVG';
 import ResetSVG from './ResetSVG';
 import SaveSVG from './SaveSVG'
 import ListSVG from './ListSVG';
+import PlusSVG from './PlusSVG';
 
 export default function Icon({size='32', color='blue', type='circle'}){
 
@@ -34,6 +35,9 @@ export default function Icon({size='32', color='blue', type='circle'}){
   }
   if(type === 'list'){
     icon = <ListSVG size={size} color={hexColor}/>
+  }
+  if(type === 'plus'){
+    icon = <PlusSVG size={size} color={hexColor}/>
   }
 
   return (

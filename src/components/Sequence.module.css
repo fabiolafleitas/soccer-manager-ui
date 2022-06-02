@@ -1,0 +1,40 @@
+.sequenceContainer {
+  display: flex;
+  align-items: center;
+}
+
+.sequenceContainer .sequence:not(:last-child){
+  margin-right: 10px;
+}
+
+.sequence {
+  width: 16px;
+  height: 16px;
+  background-color: var(--bg-gray);
+  border: 1px solid var(--bg-gray);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sequence:hover {
+  background-color: var(--bg-light-gray);
+  border-color: var(--bg-light-gray);
+}
+
+.plus {
+  border: 1px solid var(--bg-gray);
+  background-color: transparent;
+}
+
+.plus:hover {
+  background-color: var(--bg-gray);
+  border-color: var(--bg-gray);
+}
+
+.active {
+  background-color: var(--bg-secondary);
+  border-color: var(--bg-secondary);
+}

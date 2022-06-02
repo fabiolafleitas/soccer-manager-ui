@@ -1,6 +1,8 @@
 :root {
   --bg-primary: #2c343a;
   --bg-secondary: #ffffff;
+  --bg-gray: #52585F;
+  --bg-light-gray: #d3d3d3;
   --bg-blue: #5f9ea0;
   --bg-red: #eb5a5a;
   --bg-secondary-hover: #f1f3f7;
