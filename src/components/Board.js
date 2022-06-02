@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Draggable } from 'react-beautiful-dnd';
+import { Droppable } from 'react-beautiful-dnd';
+import { DragDropContext } from 'react-beautiful-dnd';
 import styles from './Board.module.css';
 
 const setBoardDimensions = (rows, columns) => {
@@ -34,18 +37,21 @@ const calculateElementPositions = (positionIndex) => {
 export default function Board(props) {
   const { selectedItem, isReset, onResetRestart, tacticGroup, tacticSequence } = props;
 
-  const [elements, setElements] = useState([]);
+  const elements = tacticGroup.tactics[tacticSequence].elements; 
+  // const [elements, setElements] = useState([]);
   const [elementsPosition, setElementsPosition] = useState([]);
   /* Fixed board size 60 columns and 40 rows */
   const board = useMemo(() => setBoardDimensions(40,60),[]);
 
+  /*
   useEffect(() => {
     setElements(tacticGroup.tactics[tacticSequence].elements);
   }, [tacticGroup,tacticSequence]);
+  */
 
   useEffect(() => {
     if(isReset){
-      setElements([]);
+      //setElements([]);
       onResetRestart();
     }
   }, [isReset, onResetRestart]);  
@@ -121,21 +127,50 @@ export default function Board(props) {
 
     return `${elementOnBoard.attributes.number}`;
   }
+  
+  const handleOnDragEnd = (dragEvent) => {
+    console.log(dragEvent);
+    props.onElementDrop(+dragEvent.source.droppableId, +dragEvent.destination.droppableId);
+  }
 
   return (
-    <div className={styles.board}>
-      {board.map(key =>
-        <button key={key} className={styles.spot}
-          onClick={() => handleBoardClick(key)}>
-          { isElementOnSpot(key) &&
-            <div className={getElementClass(key)}>
-              <div className={styles.playerNumber}>
-                {getElementNumber(key)}
-              </div>
-            </div>
-          }
-        </button>
-      )}
-    </div>
+    <DragDropContext onDragEnd={handleOnDragEnd}>
+      <div className={styles.board}>
+        {board.map(key =>
+          <Droppable droppableId={key.toString()} key={key}>
+            { (droppableProvided) =>
+              <button
+              {...droppableProvided.droppableProps}
+              ref={droppableProvided.innerRef} 
+              key={key} 
+              className={styles.spot}
+              onClick={() => handleBoardClick(key)}>
+              {isElementOnSpot(key) &&
+                <Draggable 
+                  key={key} 
+                  draggableId={key.toString()}
+                  index={0}
+                  >
+                  {(draggableProvided) => 
+                    <div
+                      key={key}  
+                      {...draggableProvided.draggableProps}
+                      ref={draggableProvided.innerRef}
+                      {...draggableProvided.dragHandleProps}
+                      className={getElementClass(key)}>
+                      <div className={styles.playerNumber}>
+                        {getElementNumber(key)}
+                      </div>
+                    </div>
+                  }
+                </Draggable>
+              }
+              {droppableProvided.placeholder}
+              </button>
+            }
+          </Droppable>
+        )}
+      </div>
+    </DragDropContext>
   );
 }

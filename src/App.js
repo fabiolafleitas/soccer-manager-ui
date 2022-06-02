@@ -78,6 +78,28 @@ function App() {
     });
   }
 
+  const handleOnElementDrop = (sourceIndex, destinationIndex) => {
+    setTacticGroup({
+      ...tacticGroup,
+      tactics: tacticGroup.tactics.map(tactic => {
+        if(tactic.sequence !== selectedSequence){
+          return tactic
+        }
+        return {
+          ...tactic,
+          elements: tactic.elements.map(
+            element => {
+              if(element.index !== sourceIndex){
+                return element;
+              }
+              return {...element, index: destinationIndex}
+            }
+          )
+        }
+      })
+    });
+  }
+
   return (
     <div className="main-container">
       <Toolbar selectedItem={selectedItem}
@@ -92,7 +114,8 @@ function App() {
               tacticGroup={tacticGroup}
               tacticSequence={selectedSequence}
               onElementAdd={handleElementAdd} 
-              onResetRestart={handleIsResetRestart} />
+              onResetRestart={handleIsResetRestart}
+              onElementDrop={handleOnElementDrop} />
       </div>
       <Sequence tacticSequence={selectedSequence}
                 tacticsLength={tacticGroup.tactics.length}
