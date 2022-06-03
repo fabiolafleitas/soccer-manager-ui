@@ -1,5 +1,7 @@
 # Soccer Manager UI
 
+![screely-1654288634213](https://user-images.githubusercontent.com/3942013/171948795-2dcd7cef-a3e8-49cd-b0d1-ba5b4e842bb7.png)
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
