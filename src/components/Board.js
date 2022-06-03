@@ -1,60 +1,26 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Draggable } from 'react-beautiful-dnd';
-import { Droppable } from 'react-beautiful-dnd';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { Droppable, Draggable } from 'react-beautiful-dnd';
+import { setDimensions, getPostionFromXY, getSurrondPositionsFromXY } from '../helpers/convert';
 import styles from './Board.module.css';
 
-const setBoardDimensions = (rows, columns) => {
-  return [...Array(rows*columns).keys()].map(index => index + 1);
+function getStyle(style, snapshot) {
+  if (snapshot.isDragging) return style;
+
+  return {
+    ...style,
+    transform: `none!important`
+  };
 }
 
-const getXY = (positionIndex) => {
-  const y = Math.floor(positionIndex/60)+1;
-  const x = positionIndex - ((y-1)*60);
-  return [x,y];
-}
-
-const getPostionFromXY = (x,y) => {
-  return x + ((y-1)*60);
-}
-
-const calculateElementPositions = (positionIndex) => {
-  const [x, y] = getXY(positionIndex);
-
-  return [
-    positionIndex,
-    getPostionFromXY(x-1,y-1), //up left
-    getPostionFromXY(x,y-1), //up
-    getPostionFromXY(x+1,y-1), //up right
-    getPostionFromXY(x-1,y), //left
-    getPostionFromXY(x+1,y), //righ
-    getPostionFromXY(x-1,y+1), //down left
-    getPostionFromXY(x,y+1), //down
-    getPostionFromXY(x+1,y+1)//down right
-  ];
-}
 
 export default function Board(props) {
-  const { selectedItem, isReset, onResetRestart, tacticGroup, tacticSequence } = props;
+  const { selectedItem, tacticGroup, tacticSequence } = props;
 
   const elements = tacticGroup.tactics[tacticSequence].elements; 
-  // const [elements, setElements] = useState([]);
   const [elementsPosition, setElementsPosition] = useState([]);
   /* Fixed board size 60 columns and 40 rows */
-  const board = useMemo(() => setBoardDimensions(40,60),[]);
-
-  /*
-  useEffect(() => {
-    setElements(tacticGroup.tactics[tacticSequence].elements);
-  }, [tacticGroup,tacticSequence]);
-  */
-
-  useEffect(() => {
-    if(isReset){
-      //setElements([]);
-      onResetRestart();
-    }
-  }, [isReset, onResetRestart]);  
+  const rows = useMemo(() => setDimensions(40),[]);
+  const columns = useMemo(() => setDimensions(60),[]); 
 
   const totalElementsOnBoard = {
       team1: elements.length > 0 ? elements.filter(element => element.attributes.team === 'team1').length : 0,
@@ -62,11 +28,15 @@ export default function Board(props) {
       ball: elements.length > 0 ? elements.filter(element => element.attributes.team === 'ball').length : 0
   };
 
-  const handleBoardClick = (positionIndex) => {
+  const handleBoardClick = (row, col) => {
+    const positionIndex = getPostionFromXY(col,row); 
+
+    // No item selected in toolbar
     if (selectedItem === '') {
-      return;
+       return;
     }
 
+    // Allow max number of players or ball
     if (selectedItem === 'ball'){
       if (totalElementsOnBoard[selectedItem] > 0){
         return;
@@ -77,11 +47,12 @@ export default function Board(props) {
       }
     }
 
+    // Check if the selected position is a surrond position of any element already placed on the board
     if(elementsPosition.includes(positionIndex)){
       return;
     }
 
-    const elementSpace = calculateElementPositions(positionIndex);
+    const elementSpace = getSurrondPositionsFromXY(positionIndex);
     setElementsPosition([...elementsPosition, ...elementSpace]);
 
     const element = {
@@ -93,22 +64,23 @@ export default function Board(props) {
       },
       index: positionIndex,
       position: {
-        x: Math.floor(positionIndex / 60),
-        y: positionIndex % 60
+        x: row,
+        y: col
       }
     }
-    // setElements(prevOccupiedPlaces => [...prevOccupiedPlaces, element]);
     props.onElementAdd(tacticSequence, element);
   }
 
-  const isElementOnSpot = (positionIndex) => {
+  const isElementOnSpot = (row, col) => {
+    const positionIndex = getPostionFromXY(col,row);
     const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
     return !!elementOnBoard;
   }
 
-  const getElementClass = (positionIndex) => {
+  const getElementClass = (row, col) => {
+    const positionIndex = getPostionFromXY(col,row);
     const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
@@ -116,7 +88,8 @@ export default function Board(props) {
     return `${styles.player} ${styles[elementOnBoard.attributes.team]}`;
   }
 
-  const getElementNumber = (positionIndex) => {
+  const getElementNumber = (row, col) => {
+    const positionIndex = getPostionFromXY(col,row);
     const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
@@ -127,50 +100,44 @@ export default function Board(props) {
 
     return `${elementOnBoard.attributes.number}`;
   }
-  
-  const handleOnDragEnd = (dragEvent) => {
-    console.log(dragEvent);
-    props.onElementDrop(+dragEvent.source.droppableId, +dragEvent.destination.droppableId);
-  }
 
   return (
-    <DragDropContext onDragEnd={handleOnDragEnd}>
-      <div className={styles.board}>
-        {board.map(key =>
-          <Droppable droppableId={key.toString()} key={key}>
-            { (droppableProvided) =>
-              <button
+    <div className={styles.board}>
+      {rows.map(row =>
+        <Droppable key={`row${row}`} droppableId={`row${row}`} direction="horizontal" isCombinedEnabled>
+          {droppableProvided => (
+            <div className={styles.row} 
+              ref={droppableProvided.innerRef}
               {...droppableProvided.droppableProps}
-              ref={droppableProvided.innerRef} 
-              key={key} 
-              className={styles.spot}
-              onClick={() => handleBoardClick(key)}>
-              {isElementOnSpot(key) &&
-                <Draggable 
-                  key={key} 
-                  draggableId={key.toString()}
-                  index={0}
-                  >
-                  {(draggableProvided) => 
-                    <div
-                      key={key}  
-                      {...draggableProvided.draggableProps}
+            >
+              {columns.map(col => (
+                <Draggable key={`col${col}`} draggableId={`row${row}col${col}`} index={col} isDragDisabled={!isElementOnSpot(row,col)}>
+                  {(draggableProvided, snapshot) => (
+                    <div className={styles.spot}
+                      onClick={() => handleBoardClick(row,col)}
                       ref={draggableProvided.innerRef}
+                      {...draggableProvided.draggableProps}
                       {...draggableProvided.dragHandleProps}
-                      className={getElementClass(key)}>
-                      <div className={styles.playerNumber}>
-                        {getElementNumber(key)}
+                      style={getStyle(draggableProvided.draggableProps.style, snapshot)}
+                    >
+                    {isElementOnSpot(row,col) &&
+                      <div className={getElementClass(row,col)}>
+                        <div className={styles.playerNumber}>
+                          {getElementNumber(row,col)}
+                        </div>
                       </div>
+                    }
                     </div>
-                  }
+                  )}
                 </Draggable>
-              }
-              {droppableProvided.placeholder}
-              </button>
-            }
-          </Droppable>
-        )}
-      </div>
-    </DragDropContext>
+              ))}
+              <span style={{visibility: 'hidden'}}>
+                {droppableProvided.placeholder}
+              </span>
+            </div>
+          )}
+        </Droppable>
+      )}
+    </div>
   );
 }
