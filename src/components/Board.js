@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { boardConfig } from '../config/board';
-import { setDimensions, getPostionFromXY, getOccupiedPositions } from '../helpers/convert';
+import { setDimensions, getPostionFromXY, getOccupiedPositions, getSurrondPositionsFromXY } from '../helpers/convert';
 import styles from './Board.module.css';
 
 function getStyle(style, snapshot) {
@@ -34,11 +34,15 @@ export default function Board(props) {
   const container = useRef();
 
   useEffect(() => {
+    cleanDragStyle();
+  }, [tacticGroup]);
+
+  const cleanDragStyle = () => {
     const spots = container.current.querySelectorAll('div.spot');
     spots.forEach(spot => {
       spot.style.removeProperty('transform');
     });
-  }, [tacticGroup]);
+  }
 
   const handleBoardClick = (row, col) => {
     const positionIndex = getPostionFromXY(col,row)[0]; 
@@ -59,13 +63,10 @@ export default function Board(props) {
       }
     }
 
-    // Check if the selected position is a surrond position of any element already placed on the board
+    // Check if the selected position is a surrounded position of any element already placed on the board
     if(elementsPosition.includes(positionIndex)){
       return;
     }
-
-    // const elementSpace = getSurrondPositionsFromXY(positionIndex);
-    // setElementsPosition([...elementsPosition, ...elementSpace]);
 
     const element = {
       id: positionIndex,
@@ -81,6 +82,24 @@ export default function Board(props) {
       }
     }
     props.onElementAdd(tacticSequence, element);
+  }
+
+  const handleElementDrop = (result) => {
+    const sourceX = +result.source.index;
+    const sourceY = +result.source.droppableId.split('row')[1];
+    const sourceIndex = getPostionFromXY(sourceX, sourceY)[0];
+    
+    const destinationX = +result.destination.index;
+    const destinationY = +result.destination.droppableId.split('row')[1];
+    const destIndex = getPostionFromXY(destinationX, destinationY)[0];
+
+    // Check if the selected position is a surrounded position of any element already placed on the board
+    if(elementsPosition.includes(destIndex) && !getSurrondPositionsFromXY(sourceX, sourceY).includes(destIndex)){
+      cleanDragStyle();
+      return;
+    }
+
+    props.onElementDrop({sourceIndex, destIndex, x:destinationX, y:destinationY});
   }
 
   const isElementOnSpot = (row, col) => {
@@ -114,42 +133,44 @@ export default function Board(props) {
   }
 
   return (
-    <div className={styles.board} ref={container}>
-      {rows.map(row =>
-        <Droppable key={`row${row}`} droppableId={`row${row}`} direction="horizontal" isCombinedEnabled>
-          {droppableProvided => (
-            <div className={styles.row} 
-              ref={droppableProvided.innerRef}
-              {...droppableProvided.droppableProps}
-            >
-              {columns.map(col => (
-                <Draggable key={`col${col}`} draggableId={`row${row}col${col}`} index={col} isDragDisabled={!isElementOnSpot(row,col)}>
-                  {(draggableProvided, snapshot) => (
-                    <div className={`spot ${styles.spot}`}
-                      onClick={() => handleBoardClick(row,col)}
-                      ref={draggableProvided.innerRef}
-                      {...draggableProvided.draggableProps}
-                      {...draggableProvided.dragHandleProps}
-                      style={getStyle(draggableProvided.draggableProps.style, snapshot)}
-                    >
-                    {isElementOnSpot(row,col) &&
-                      <div className={getElementClass(row,col)}>
-                        <div className={styles.playerNumber}>
-                          {getElementNumber(row,col)}
+    <DragDropContext onDragEnd={handleElementDrop}>
+      <div className={styles.board} ref={container}>
+        {rows.map(row =>
+          <Droppable key={`row${row}`} droppableId={`row${row}`} direction="horizontal" isCombinedEnabled>
+            {droppableProvided => (
+              <div className={styles.row} 
+                ref={droppableProvided.innerRef}
+                {...droppableProvided.droppableProps}
+              >
+                {columns.map(col => (
+                  <Draggable key={`col${col}`} draggableId={`row${row}col${col}`} index={col} isDragDisabled={!isElementOnSpot(row,col)}>
+                    {(draggableProvided, snapshot) => (
+                      <div className={`spot ${styles.spot}`}
+                        onClick={() => handleBoardClick(row,col)}
+                        ref={draggableProvided.innerRef}
+                        {...draggableProvided.draggableProps}
+                        {...draggableProvided.dragHandleProps}
+                        style={getStyle(draggableProvided.draggableProps.style, snapshot)}
+                      >
+                      {isElementOnSpot(row,col) &&
+                        <div className={getElementClass(row,col)}>
+                          <div className={styles.playerNumber}>
+                            {getElementNumber(row,col)}
+                          </div>
                         </div>
+                      }
                       </div>
-                    }
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              <span style={{visibility: 'hidden'}}>
-                {droppableProvided.placeholder}
-              </span>
-            </div>
-          )}
-        </Droppable>
-      )}
-    </div>
+                    )}
+                  </Draggable>
+                ))}
+                <span style={{visibility: 'hidden'}}>
+                  {droppableProvided.placeholder}
+                </span>
+              </div>
+            )}
+          </Droppable>
+        )}
+      </div>
+    </DragDropContext>
   );
 }

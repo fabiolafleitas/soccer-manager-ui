@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
 import Field from './components/Field';
 import Toolbar from './components/Toolbar';
 import Board from './components/Board';
 import Sequence from './components/Sequence';
 import './App.css';
 import { mockGroup1Data } from './data/groupData';
-import { getPostionFromXY } from './helpers/convert';
 
 const untitledGroup = {
   name: 'Untitled',
@@ -90,15 +88,6 @@ function App() {
   }
 
   const handleOnElementDrop = (result) => {
-    const sourceX = +result.source.index;
-    const sourceY = +result.source.droppableId.split('row')[1];
-    const sourcePositionIndex = getPostionFromXY(sourceX, sourceY)[0];
-    
-    const destinationX = +result.destination.index;
-    const destinationY = +result.destination.droppableId.split('row')[1];
-    const destPositionIndex = getPostionFromXY(destinationX, destinationY)[0];
-    console.log({destinationX, destinationY, destPositionIndex});
-    
     setTacticGroup({
       ...tacticGroup,
       tactics: tacticGroup.tactics.map(tactic => {
@@ -109,15 +98,15 @@ function App() {
           ...tactic,
           elements: tactic.elements.map(
             element => {
-              if(element.index !== sourcePositionIndex){
+              if(element.index !== result.sourceIndex){
                 return element;
               }
               return {
                 ...element, 
-                index: destPositionIndex,
+                index: result.destIndex,
                 position: {
-                  x: destinationX,
-                  y: destinationY
+                  x: result.x,
+                  y: result.y
                 }
               }
             }
@@ -128,26 +117,25 @@ function App() {
   }
 
   return (
-    <DragDropContext onDragEnd={handleOnElementDrop}>
-      <div className="main-container">
-        <Toolbar selectedItem={selectedItem}
-                tacticGroupName={tacticGroup.name}
-                onItemClick={handleItemSelection}
-                onResetClick={handleResetClick}
-                onTacticClick={handleTacticSelection} />
-        <div className="field-container">
-          <Field />
-          <Board selectedItem={selectedItem}
-                tacticGroup={tacticGroup}
-                tacticSequence={selectedSequence}
-                onElementAdd={handleElementAdd} />
-        </div>
-        <Sequence tacticSequence={selectedSequence}
-                  tacticsLength={tacticGroup.tactics.length}
-                  onSequenceSelected={handleSequenceSelection}
-                  onNewSequenceAdded={handleNewSequence} />
+    <div className="main-container">
+      <Toolbar selectedItem={selectedItem}
+              tacticGroupName={tacticGroup.name}
+              onItemClick={handleItemSelection}
+              onResetClick={handleResetClick}
+              onTacticClick={handleTacticSelection} />
+      <div className="field-container">
+        <Field />
+        <Board selectedItem={selectedItem}
+              tacticGroup={tacticGroup}
+              tacticSequence={selectedSequence}
+              onElementAdd={handleElementAdd}
+              onElementDrop={handleOnElementDrop} />
       </div>
-    </DragDropContext>
+      <Sequence tacticSequence={selectedSequence}
+                tacticsLength={tacticGroup.tactics.length}
+                onSequenceSelected={handleSequenceSelection}
+                onNewSequenceAdded={handleNewSequence} />
+    </div>
   );
 }
 
