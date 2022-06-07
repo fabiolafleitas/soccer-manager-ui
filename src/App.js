@@ -92,11 +92,12 @@ function App() {
   const handleOnElementDrop = (result) => {
     const sourceX = +result.source.index;
     const sourceY = +result.source.droppableId.split('row')[1];
-    const sourcePositionIndex = getPostionFromXY(sourceX, sourceY);
+    const sourcePositionIndex = getPostionFromXY(sourceX, sourceY)[0];
     
     const destinationX = +result.destination.index;
     const destinationY = +result.destination.droppableId.split('row')[1];
-    const destPositionIndex = getPostionFromXY(destinationX, destinationY);
+    const destPositionIndex = getPostionFromXY(destinationX, destinationY)[0];
+    console.log({destinationX, destinationY, destPositionIndex});
     
     setTacticGroup({
       ...tacticGroup,
@@ -115,7 +116,6 @@ function App() {
                 ...element, 
                 index: destPositionIndex,
                 position: {
-                  ...element.position,
                   x: destinationX,
                   y: destinationY
                 }

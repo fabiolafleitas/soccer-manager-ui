@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
-import { setDimensions, getPostionFromXY, getSurrondPositionsFromXY } from '../helpers/convert';
+import { boardConfig } from '../config/board';
+import { setDimensions, getPostionFromXY, getOccupiedPositions } from '../helpers/convert';
 import styles from './Board.module.css';
 
 function getStyle(style, snapshot) {
@@ -8,7 +9,7 @@ function getStyle(style, snapshot) {
 
   return {
     ...style,
-    transform: `none!important`
+    transform: `none !important`
   };
 }
 
@@ -16,11 +17,13 @@ function getStyle(style, snapshot) {
 export default function Board(props) {
   const { selectedItem, tacticGroup, tacticSequence } = props;
 
-  const elements = tacticGroup.tactics[tacticSequence].elements; 
-  const [elementsPosition, setElementsPosition] = useState([]);
   /* Fixed board size 60 columns and 40 rows */
-  const rows = useMemo(() => setDimensions(40),[]);
-  const columns = useMemo(() => setDimensions(60),[]); 
+  const rows = useMemo(() => setDimensions(boardConfig.ROWS),[]);
+  const columns = useMemo(() => setDimensions(boardConfig.COLUMNS),[]);
+
+  const elements = tacticGroup.tactics[tacticSequence].elements; 
+  const elementsPosition = getOccupiedPositions(elements);
+  console.log(elementsPosition);
 
   const totalElementsOnBoard = {
       team1: elements.length > 0 ? elements.filter(element => element.attributes.team === 'team1').length : 0,
@@ -28,8 +31,17 @@ export default function Board(props) {
       ball: elements.length > 0 ? elements.filter(element => element.attributes.team === 'ball').length : 0
   };
 
+  const container = useRef();
+
+  useEffect(() => {
+    const spots = container.current.querySelectorAll('div.spot');
+    spots.forEach(spot => {
+      spot.style.removeProperty('transform');
+    });
+  }, [tacticGroup]);
+
   const handleBoardClick = (row, col) => {
-    const positionIndex = getPostionFromXY(col,row); 
+    const positionIndex = getPostionFromXY(col,row)[0]; 
 
     // No item selected in toolbar
     if (selectedItem === '') {
@@ -52,8 +64,8 @@ export default function Board(props) {
       return;
     }
 
-    const elementSpace = getSurrondPositionsFromXY(positionIndex);
-    setElementsPosition([...elementsPosition, ...elementSpace]);
+    // const elementSpace = getSurrondPositionsFromXY(positionIndex);
+    // setElementsPosition([...elementsPosition, ...elementSpace]);
 
     const element = {
       id: positionIndex,
@@ -72,7 +84,7 @@ export default function Board(props) {
   }
 
   const isElementOnSpot = (row, col) => {
-    const positionIndex = getPostionFromXY(col,row);
+    const positionIndex = getPostionFromXY(col,row)[0];
     const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
@@ -80,7 +92,7 @@ export default function Board(props) {
   }
 
   const getElementClass = (row, col) => {
-    const positionIndex = getPostionFromXY(col,row);
+    const positionIndex = getPostionFromXY(col,row)[0];
     const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
@@ -89,7 +101,7 @@ export default function Board(props) {
   }
 
   const getElementNumber = (row, col) => {
-    const positionIndex = getPostionFromXY(col,row);
+    const positionIndex = getPostionFromXY(col,row)[0];
     const elementOnBoard = elements.find(element => {
       return element.index === positionIndex;
     });
@@ -102,7 +114,7 @@ export default function Board(props) {
   }
 
   return (
-    <div className={styles.board}>
+    <div className={styles.board} ref={container}>
       {rows.map(row =>
         <Droppable key={`row${row}`} droppableId={`row${row}`} direction="horizontal" isCombinedEnabled>
           {droppableProvided => (
@@ -113,7 +125,7 @@ export default function Board(props) {
               {columns.map(col => (
                 <Draggable key={`col${col}`} draggableId={`row${row}col${col}`} index={col} isDragDisabled={!isElementOnSpot(row,col)}>
                   {(draggableProvided, snapshot) => (
-                    <div className={styles.spot}
+                    <div className={`spot ${styles.spot}`}
                       onClick={() => handleBoardClick(row,col)}
                       ref={draggableProvided.innerRef}
                       {...draggableProvided.draggableProps}
