@@ -22,7 +22,6 @@ export const getPostionFromXY = (x,y) => {
 
 export const getSurrondPositionsFromXY = (index) => {
   const [x, y] = getXY(index);
-  console.log({index, x, y});
 
   let result = [index];
   result = [...result, ...getPostionFromXY(x-1,y-1)] // up left
@@ -44,4 +43,83 @@ export const getOccupiedPositions = (elements) => {
   });
   
   return  [...new Set(occupiedPositions)];
+}
+
+export const buildArrow = (x, y, arrowType) => {
+  const result = {
+    source : {x: 0, y: 0},
+    destination: {x: 0, y: 0}
+  }
+  let offset = {x: 0, y:0};
+
+  switch (arrowType) {
+    case 'topLeft':
+      result.source.x = x;
+      result.source.y = y;
+      result.destination.x = x-20;
+      result.destination.y = y-20;
+      break;
+    case 'top':
+      offset.x = 20;
+      offset.y = -8;
+      result.source.x = x+offset.x;    
+      result.source.y = y+offset.y;
+      result.destination.x = result.source.x;  
+      result.destination.y = result.source.y-30;
+      break;
+    case 'topRight':
+      offset.x = 40;
+      result.source.x = x+offset.x;
+      result.source.y = y;
+      result.destination.x = result.source.x+20;
+      result.destination.y = y-20;
+      break;
+    case 'left':
+      offset.x = -8;
+      offset.y = 20;
+      result.source.x = x+offset.x;
+      result.source.y = y+offset.y;
+      result.destination.x = result.source.x-30;
+      result.destination.y = result.source.y;
+      break;
+    case 'right':
+      offset.x = 40+8;
+      offset.y = 20;
+      result.source.x = x+offset.x;
+      result.source.y = y+offset.y;
+      result.destination.x = result.source.x+30;
+      result.destination.y = result.source.y;
+      break;
+    case 'bottomLeft':
+      offset.x = 0;
+      offset.y = 40;
+      result.source.x = x+offset.x;
+      result.source.y = y+offset.y;
+      result.destination.x = result.source.x-20;
+      result.destination.y = result.source.y+20;
+      break;
+    case 'bottom':
+      offset.x = 20;
+      offset.y = 40+8;
+      result.source.x = x+offset.x;
+      result.source.y = y+offset.y;
+      result.destination.x = result.source.x;
+      result.destination.y = result.source.y+30;
+      break;
+    case 'bottomRight':
+      offset.x = 40;
+      offset.y = 40;
+      result.source.x = x+offset.x;
+      result.source.y = y+offset.y;
+      result.destination.x = result.source.x+20;
+      result.destination.y = result.source.y+20;
+      break;
+    default:
+      result.source.x = x-10;
+      result.source.y = y+20;
+      result.destination.x = x-10-40;
+      result.destination.y = y+20;
+  }
+
+  return result;
 }

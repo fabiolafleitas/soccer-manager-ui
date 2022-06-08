@@ -68,6 +68,34 @@ function App() {
     });
   }
 
+  const handleArrowAdd = (arrow, index) => {
+    setTacticGroup({
+      ...tacticGroup,
+      tactics: tacticGroup.tactics.map(tactic => {
+        if(tactic.sequence !== selectedSequence){
+          return tactic
+        }
+        return {
+          ...tactic,
+          elements: tactic.elements.map(
+            element => {
+              if(element.index !== index){
+                return element;
+              }
+              return {
+                ...element, 
+                attributes: {
+                  ...element.attributes,
+                  arrow: arrow
+                }
+              }
+            }
+          )
+        }
+      })
+    });
+  }
+
   const handleSequenceSelection = (sequence) => {
     setSelectedSequence(sequence);
   }
@@ -102,7 +130,8 @@ function App() {
                 return element;
               }
               return {
-                ...element, 
+                ...element,
+                id: result.destIndex,
                 index: result.destIndex,
                 position: {
                   x: result.x,
@@ -129,6 +158,7 @@ function App() {
               tacticGroup={tacticGroup}
               tacticSequence={selectedSequence}
               onElementAdd={handleElementAdd}
+              onArrowAdd={handleArrowAdd}
               onElementDrop={handleOnElementDrop} />
       </div>
       <Sequence tacticSequence={selectedSequence}

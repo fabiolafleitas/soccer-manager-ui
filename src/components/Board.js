@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import * as arrowLine from 'arrow-line';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { boardConfig } from '../config/board';
-import { setDimensions, getPostionFromXY, getOccupiedPositions, getSurrondPositionsFromXY } from '../helpers/convert';
+import { setDimensions, getPostionFromXY, getOccupiedPositions, getSurrondPositionsFromXY, buildArrow} from '../helpers/convert';
+import ArrowsMenu from './ArrowsMenu';
 import styles from './Board.module.css';
 
 function getStyle(style, snapshot) {
@@ -17,13 +19,16 @@ function getStyle(style, snapshot) {
 export default function Board(props) {
   const { selectedItem, tacticGroup, tacticSequence } = props;
 
+  const [arrows, setArrows] = useState([]);
+  const [elementsMap, setElementsMap] = useState({});
+  const container = useRef();
+
   /* Fixed board size 60 columns and 40 rows */
   const rows = useMemo(() => setDimensions(boardConfig.ROWS),[]);
   const columns = useMemo(() => setDimensions(boardConfig.COLUMNS),[]);
 
   const elements = tacticGroup.tactics[tacticSequence].elements; 
   const elementsPosition = getOccupiedPositions(elements);
-  console.log(elementsPosition);
 
   const totalElementsOnBoard = {
       team1: elements.length > 0 ? elements.filter(element => element.attributes.team === 'team1').length : 0,
@@ -31,11 +36,37 @@ export default function Board(props) {
       ball: elements.length > 0 ? elements.filter(element => element.attributes.team === 'ball').length : 0
   };
 
-  const container = useRef();
-
   useEffect(() => {
     cleanDragStyle();
-  }, [tacticGroup]);
+
+    //Add arrows
+    const elements = tacticGroup.tactics[tacticSequence].elements;
+    const getArrows = (elements) => {
+      const result = [];
+      elements.forEach(element => {
+        let elem = container.current.querySelector(`.spot #row${element.position.y}col${element.position.x}`);
+        let rect = elem.getBoundingClientRect();
+        if(element.attributes.arrow !== 0){
+          const {source, destination} = buildArrow(rect.x, rect.y, element.attributes.arrow);
+          const arrow = arrowLine({x:source.x, y:source.y}, {x:destination.x, y:destination.y}, 
+            { color: '#d3d3d3', style: 'dash', curvature: 0,
+            endpoint: {type: 'arrowHead', fillColor: '#d3d3d3'} });
+          result.push(arrow);
+        }
+      });
+      return result;
+    }
+    const newArrows = getArrows(elements);
+
+    setArrows(newArrows);
+
+    // Clean up arrows
+    return function clearArrows(){
+      newArrows.forEach(arrow => {
+        arrow.remove();
+      });
+    };
+  }, [tacticGroup, tacticSequence]);
 
   const cleanDragStyle = () => {
     const spots = container.current.querySelectorAll('div.spot');
@@ -73,12 +104,13 @@ export default function Board(props) {
       type: selectedItem === 'ball' ? 'ball' : 'player',
       attributes: {
         team: selectedItem,
-        number: totalElementsOnBoard[selectedItem] + 1
+        number: totalElementsOnBoard[selectedItem] + 1,
+        arrow: 0
       },
       index: positionIndex,
       position: {
-        x: row,
-        y: col
+        x: col,
+        y: row
       }
     }
     props.onElementAdd(tacticSequence, element);
@@ -100,6 +132,57 @@ export default function Board(props) {
     }
 
     props.onElementDrop({sourceIndex, destIndex, x:destinationX, y:destinationY});
+  }
+
+  const handleElementClick = (row, col) => {
+    const positionIndex = getPostionFromXY(col,row)[0];
+    if(!elementsMap[positionIndex]){
+      setElementsMap({
+        ...elementsMap,
+        [positionIndex]: { 
+          show: true
+        }
+      });
+    }else{
+      setElementsMap({
+        ...elementsMap,
+        [positionIndex]: {
+          ...elementsMap[positionIndex],
+          show: !elementsMap[positionIndex].show
+        }
+      });
+    }
+  }
+
+  const handleArrowClick = (selection, row, col) => {
+    const positionIndex = getPostionFromXY(col, row)[0];
+    setElementsMap({
+      ...elementsMap,
+      [positionIndex]: {
+        ...elementsMap[positionIndex],
+        show: false
+      }
+    });
+    props.onArrowAdd(selection, positionIndex);
+  }
+
+  const handleDragStart = (event) => {
+    const x = event.source.index;
+    const y = +event.source.droppableId.split('row')[1];
+    const index = getPostionFromXY(x, y)[0];
+
+    const arrowElements = elements.filter(element => {
+      return element.attributes.arrow !== 0;
+    });
+
+    const arrowIndex = arrowElements.findIndex(arrowElement => {
+      return arrowElement.index === index;
+    })
+
+    // Hide arrow for the element being dragged
+    if(arrowIndex >= 0){
+      arrows[arrowIndex].update({ color: 'transparent', endpoint: {fillColor: 'transparent'} });
+    }
   }
 
   const isElementOnSpot = (row, col) => {
@@ -132,8 +215,13 @@ export default function Board(props) {
     return `${elementOnBoard.attributes.number}`;
   }
 
+  const getElementShow = (row, col) => {
+    const positionIndex = getPostionFromXY(col,row)[0];
+    return elementsMap[positionIndex] ? elementsMap[positionIndex].show : false;
+  }
+
   return (
-    <DragDropContext onDragEnd={handleElementDrop}>
+    <DragDropContext onDragEnd={handleElementDrop} onDragStart={handleDragStart}>
       <div className={styles.board} ref={container}>
         {rows.map(row =>
           <Droppable key={`row${row}`} droppableId={`row${row}`} direction="horizontal" isCombinedEnabled>
@@ -153,10 +241,14 @@ export default function Board(props) {
                         style={getStyle(draggableProvided.draggableProps.style, snapshot)}
                       >
                       {isElementOnSpot(row,col) &&
-                        <div className={getElementClass(row,col)}>
+                        <div id={`row${row}col${col}`} className={getElementClass(row,col)}
+                          onClick={() => {handleElementClick(row,col)}}>
                           <div className={styles.playerNumber}>
                             {getElementNumber(row,col)}
                           </div>
+                          <ArrowsMenu show={getElementShow(row,col)}
+                            row={row} column={col}
+                            onArrowClick={handleArrowClick} />
                         </div>
                       }
                       </div>
