@@ -1,6 +1,6 @@
 export const mockGroup1Data = {
   name: "Group 1",
-  id: "A1",
+  _id: "A1",
   tactics: [
     {
       "sequence": 0,

@@ -4,7 +4,7 @@ import Toolbar from './components/Toolbar';
 import Board from './components/Board';
 import Sequence from './components/Sequence';
 import './App.css';
-import { mockGroup1Data } from './data/groupData';
+import { getTacticGroup, saveTacticGroup, updateTacticGroup } from './services/tactics.service';
 
 const untitledGroup = {
   name: 'Untitled',
@@ -45,11 +45,20 @@ function App() {
       return;
     }
 
-    if(tacticId !== tacticGroup.id){
-      setTimeout(() => {
-        const fetchedGroup = mockGroup1Data;
-        setTacticGroup(fetchedGroup);
-      }, 2000);
+    if(tacticId !== tacticGroup._id){
+      getTacticGroup(tacticId).then(({data}) => setTacticGroup(data));
+    }
+  }
+
+  const handleTacticSave = () => {
+    if(tacticGroup._id === undefined){
+      saveTacticGroup(tacticGroup).then(() => console.log('save done!'));
+    } else {
+      console.log(tacticGroup);
+      updateTacticGroup(tacticGroup._id, tacticGroup).then((result) => {
+        console.log(result);
+        console.log('update done!');
+      })
     }
   }
   
@@ -151,7 +160,8 @@ function App() {
               tacticGroupName={tacticGroup.name}
               onItemClick={handleItemSelection}
               onResetClick={handleResetClick}
-              onTacticClick={handleTacticSelection} />
+              onTacticClick={handleTacticSelection}
+              onTacticSaveClick={handleTacticSave} />
       <div className="field-container">
         <Field />
         <Board selectedItem={selectedItem}

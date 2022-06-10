@@ -2,26 +2,31 @@ import React, { useEffect, useState } from 'react';
 import Icon from './UI/Icon';
 import ball from '../assets/images/ball.png';
 import styles from './Toolbar.module.css';
+import { getTacticGroups } from '../services/tactics.service';
 
 export default function Toolbar(props) {
   const {selectedItem, tacticGroupName} = props;
   const [savedTactics, setSaveTactics] = useState([]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const fetchTactics = [
-        {
-          name: "Group 1",
-          id: "A1"
-        },
-        {
-          name: "Group 2",
-          id: "A2"
-        }
-      ];
-      setSaveTactics(fetchTactics);
-    }, 2000);
-    return () => { clearTimeout(timeoutId) };
+    getTacticGroups()
+      .then((result) => {
+        console.log(result)
+        setSaveTactics(result.data)
+      })
+      .catch((error) => {
+        const fetchTactics = [
+          {
+            name: "Group 1",
+            _id: "A1"
+          },
+          {
+            name: "Group 2",
+            _id: "A2"
+          }
+        ];
+        setSaveTactics(fetchTactics);
+    });
   }, []);
 
   const handleItemSelection = (item) => {
@@ -34,6 +39,10 @@ export default function Toolbar(props) {
 
   const handleTacticClick = (tacticId) => {
     props.onTacticClick(tacticId);
+  }
+
+  const handleSaveTacticClick = () => {
+    props.onTacticSaveClick();
   }
 
   return (
@@ -76,7 +85,8 @@ export default function Toolbar(props) {
           </h4>
         </li>
         <li>
-          <button className={styles.toolbarBtn} title="Save">
+          <button className={styles.toolbarBtn} title="Save"
+            onClick={() => handleSaveTacticClick()}>
             <Icon type="save" color="black" />
           </button>
         </li>
@@ -91,8 +101,8 @@ export default function Toolbar(props) {
                   <i>Untitled</i>
               </button>
               {savedTactics.map(tactic => (
-                <button key={tactic.id} className={styles.toolbarBtn}
-                        onClick={() => handleTacticClick(tactic.id)}>
+                <button key={tactic._id} className={styles.toolbarBtn}
+                        onClick={() => handleTacticClick(tactic._id)}>
                   {tactic.name}
                 </button>
               ))}
