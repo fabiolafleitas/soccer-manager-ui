@@ -114,6 +114,14 @@ export default function Board(props) {
       }
     }
     props.onElementAdd(tacticSequence, element);
+
+    setElementsMap({
+      ...elementsMap,
+      [positionIndex]: {
+        ...elementsMap[positionIndex],
+        show: false
+      }
+    });
   }
 
   const handleElementDrop = (result) => {
@@ -134,28 +142,34 @@ export default function Board(props) {
     props.onElementDrop({sourceIndex, destIndex, x:destinationX, y:destinationY});
   }
 
+  const handleElementRemove = (row, col) => {
+    const positionIndex = getPostionFromXY(col,row)[0];
+    props.onElementRemove(positionIndex);
+  }
+
   const handleElementClick = (row, col) => {
     const positionIndex = getPostionFromXY(col,row)[0];
-    if(!elementsMap[positionIndex]){
-      setElementsMap({
-        ...elementsMap,
-        [positionIndex]: { 
-          show: true
-        }
-      });
-    }else{
-      setElementsMap({
-        ...elementsMap,
-        [positionIndex]: {
-          ...elementsMap[positionIndex],
-          show: !elementsMap[positionIndex].show
-        }
-      });
+
+    const getSubMap = () => {
+      let subMap = {};
+
+      for(const key in elementsMap){
+        const showValue = elementsMap[key].show;
+        subMap = {...subMap, [key]:{show: !showValue && key === positionIndex+'' ? true : false}};
+      }
+
+      return subMap;
     }
+
+    setElementsMap(getSubMap());
   }
 
   const handleArrowClick = (selection, row, col) => {
     const positionIndex = getPostionFromXY(col, row)[0];
+    const elementOnBoard = elements.find(element => {
+      return element.index === positionIndex;
+    });
+
     setElementsMap({
       ...elementsMap,
       [positionIndex]: {
@@ -163,6 +177,10 @@ export default function Board(props) {
         show: false
       }
     });
+    if(elementOnBoard.attributes.arrow === selection){
+      props.onArrowRemove(positionIndex);
+      return;
+    }
     props.onArrowAdd(selection, positionIndex);
   }
 
@@ -220,6 +238,10 @@ export default function Board(props) {
     return elementsMap[positionIndex] ? elementsMap[positionIndex].show : false;
   }
 
+  const getElement = (row, col) => {
+    return elements.find(element => element.position.x === col && element.position.y === row);
+  }
+
   return (
     <DragDropContext onDragEnd={handleElementDrop} onDragStart={handleDragStart}>
       <div className={styles.board} ref={container}>
@@ -247,8 +269,9 @@ export default function Board(props) {
                             {getElementNumber(row,col)}
                           </div>
                           <ArrowsMenu show={getElementShow(row,col)}
-                            row={row} column={col}
-                            onArrowClick={handleArrowClick} />
+                            element={getElement(row,col)}
+                            onArrowClick={handleArrowClick}
+                            onElementRemove={handleElementRemove} />
                         </div>
                       }
                       </div>

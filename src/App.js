@@ -77,7 +77,7 @@ function App() {
     });
   }
 
-  const handleArrowAdd = (arrow, index) => {
+  const handleElementRemove = (index) => {
     setTacticGroup({
       ...tacticGroup,
       tactics: tacticGroup.tactics.map(tactic => {
@@ -86,42 +86,10 @@ function App() {
         }
         return {
           ...tactic,
-          elements: tactic.elements.map(
-            element => {
-              if(element.index !== index){
-                return element;
-              }
-              return {
-                ...element, 
-                attributes: {
-                  ...element.attributes,
-                  arrow: arrow
-                }
-              }
-            }
-          )
+          elements: tactic.elements.filter(element => element.index !== index)
         }
       })
     });
-  }
-
-  const handleSequenceSelection = (sequence) => {
-    setSelectedSequence(sequence);
-  }
-
-  const handleNewSequence = () => {
-    const newSequence = tacticGroup.tactics.length;
-    setTacticGroup({
-      ...tacticGroup,
-      tactics: [
-        ...tacticGroup.tactics,
-        {
-          sequence: newSequence,
-          elements: []
-        }
-      ]
-    });
-    setSelectedSequence(newSequence);
   }
 
   const handleOnElementDrop = (result) => {
@@ -154,6 +122,81 @@ function App() {
     });
   }
 
+  const handleArrowAdd = (arrow, index) => {
+    setTacticGroup({
+      ...tacticGroup,
+      tactics: tacticGroup.tactics.map(tactic => {
+        if(tactic.sequence !== selectedSequence){
+          return tactic
+        }
+        return {
+          ...tactic,
+          elements: tactic.elements.map(
+            element => {
+              if(element.index !== index){
+                return element;
+              }
+              return {
+                ...element, 
+                attributes: {
+                  ...element.attributes,
+                  arrow: arrow
+                }
+              }
+            }
+          )
+        }
+      })
+    });
+  }
+
+  const handleArrowRemove = (index) => {
+    setTacticGroup({
+      ...tacticGroup,
+      tactics: tacticGroup.tactics.map(tactic => {
+        if(tactic.sequence !== selectedSequence){
+          return tactic
+        }
+        return {
+          ...tactic,
+          elements: tactic.elements.map(
+            element => {
+              if(element.index !== index){
+                return element;
+              }
+              return {
+                ...element, 
+                attributes: {
+                  ...element.attributes,
+                  arrow: 0
+                }
+              }
+            }
+          )
+        }
+      })
+    });
+  }
+
+  const handleSequenceSelection = (sequence) => {
+    setSelectedSequence(sequence);
+  }
+
+  const handleNewSequence = () => {
+    const newSequence = tacticGroup.tactics.length;
+    setTacticGroup({
+      ...tacticGroup,
+      tactics: [
+        ...tacticGroup.tactics,
+        {
+          sequence: newSequence,
+          elements: []
+        }
+      ]
+    });
+    setSelectedSequence(newSequence);
+  }
+
   return (
     <div className="main-container">
       <Toolbar selectedItem={selectedItem}
@@ -168,8 +211,10 @@ function App() {
               tacticGroup={tacticGroup}
               tacticSequence={selectedSequence}
               onElementAdd={handleElementAdd}
+              onElementRemove={handleElementRemove}
+              onElementDrop={handleOnElementDrop}
               onArrowAdd={handleArrowAdd}
-              onElementDrop={handleOnElementDrop} />
+              onArrowRemove={handleArrowRemove} />
       </div>
       <Sequence tacticSequence={selectedSequence}
                 tacticsLength={tacticGroup.tactics.length}

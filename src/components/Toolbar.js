@@ -11,7 +11,6 @@ export default function Toolbar(props) {
   useEffect(() => {
     getTacticGroups()
       .then((result) => {
-        console.log(result)
         setSaveTactics(result.data)
       })
       .catch((error) => {

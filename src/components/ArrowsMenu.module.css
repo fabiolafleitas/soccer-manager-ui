@@ -30,6 +30,10 @@
   cursor: pointer;
 }
 
+.item.active button {
+  background-color: var(--bg-primary);
+}
+
 .item button:hover {
   background-color: var(--bg-primary);
 }
