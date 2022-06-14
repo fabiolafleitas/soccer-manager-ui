@@ -6,8 +6,9 @@ import styles from './Toolbar.module.css';
 import { getTacticGroups } from '../services/tactics.service';
 
 export default function Toolbar(props) {
-  const {selectedItem, tacticGroupName, unsavedTactic} = props;
+  const {selectedItem, tacticGroupName, unsavedTactic, isSaving} = props;
   const [savedTactics, setSaveTactics] = useState([]);
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     getTacticGroups()
@@ -23,7 +24,7 @@ export default function Toolbar(props) {
         ];
         setSaveTactics(fetchTactics);
     });
-  }, []);
+  }, [unsavedTactic]);
 
   const handleItemSelection = (item) => {
     props.onItemClick(item);
@@ -38,10 +39,12 @@ export default function Toolbar(props) {
   }
 
   const handleTacticClick = (tacticId) => {
+    setEditMode(false);
     props.onTacticClick(tacticId);
   }
 
   const handleSaveTacticClick = () => {
+    setEditMode(false);
     props.onTacticSaveClick();
   }
 
@@ -79,13 +82,16 @@ export default function Toolbar(props) {
 
       <ul className={styles.menu}>
         <li>
-          <EditableInput changeIndicator={unsavedTactic}
-                        onSave={handleTitleSave}>
+          <EditableInput 
+              editMode={editMode}
+              onSetEditMode={setEditMode}
+              changeIndicator={unsavedTactic}
+              onSave={handleTitleSave}>
             {tacticGroupName}
           </EditableInput>
         </li>
         <li>
-          <button className={styles.toolbarBtn} disabled={props.isSaving} title="Save"
+          <button className={styles.toolbarBtn} disabled={isSaving || editMode} title="Save"
             onClick={() => handleSaveTacticClick()}>
             <Icon type="save" color="black" />
           </button>

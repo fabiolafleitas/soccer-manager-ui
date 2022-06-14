@@ -52,13 +52,14 @@ function App() {
 
   const handleTacticSelection = (tacticId) => {
     setSelectedSequence(0);
+    setTacticTouched(false);
+    
     if(!tacticId){
       setTacticGroup(untitledGroup);
       return;
     }
 
     if(tacticId !== tacticGroup._id){
-      setTacticTouched(false);
       if(tacticId === 'A1'){
         const group1 = getMockGroup();
         setTacticGroup(group1);
@@ -75,20 +76,22 @@ function App() {
     setSaving(true);
     if(tacticGroup._id === undefined){
       saveTacticGroup(tacticGroup)
-      .then(result => {
-        console.log(result);
+      .then(({data}) => {
+        setTacticGroup(data);
         setTacticTouched(false);
-        setToastMessage('save done!')
+        setToastMessage('save done!');
       })
       .catch(error => setToastMessage(error.message))
       .finally(() => {setSaving(false)});
     } else {
       updateTacticGroup(tacticGroup._id, tacticGroup)
-      .then(result => {
+      .then(({data}) => {
+        setTacticGroup(data);
         setTacticTouched(false);
         setToastMessage('update done!');
       })
-      .catch(error => setToastMessage(error.message));
+      .catch(error => setToastMessage(error.message))
+      .finally(() => {setSaving(false)});;
     }
   }
   
@@ -203,7 +206,7 @@ function App() {
                 ...element, 
                 attributes: {
                   ...element.attributes,
-                  arrow: 0
+                  arrow: null
                 }
               }
             }

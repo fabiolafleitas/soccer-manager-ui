@@ -16,7 +16,7 @@ export default function ArrowsMenu(props) {
   }
 
   const getActiveClass = (arrow) => {
-    if(element.attributes.arrow === 0){
+    if(element.attributes.arrow === null){
       return '';
     }
     return element.attributes.arrow === arrow ? styles.active : '';

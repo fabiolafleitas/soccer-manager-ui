@@ -3,27 +3,25 @@ import { useLayoutEffect } from 'react';
 import styles from './EditableInput.module.css';
 
 export default function EditableInput(props) {
-  const { changeIndicator, children:initialValue } = props;
+  const { changeIndicator, children:initialValue, editMode, onSetEditMode } = props;
 
-  const [editMode, setEditMode] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
   useLayoutEffect(() => {
-    setEditMode(false);
-  }, [initialValue]);
+  }, [initialValue, onSetEditMode]);
 
   const handleReadModeClick = () => {
-    setEditMode(true);
+    onSetEditMode(true);
     setInputValue(initialValue);
   }
 
   const handleInputSave = () => {
-    setEditMode(false);
+    onSetEditMode(false);
     inputValue !== initialValue && props.onSave(inputValue);
   }
 
   const handleInputCancel = () => {
-    setEditMode(false);
+    onSetEditMode(false);
   }
   
   const classes = `${styles.editableInput} ${!editMode ? styles.plaintext : ''} ${changeIndicator ? styles.unsaved : ''}`

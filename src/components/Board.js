@@ -15,19 +15,31 @@ function getStyle(style, snapshot) {
   };
 }
 
+function getHighestPlayerNumber(team, elements) {
+  if(elements.length === 0) return 1;
+  const teamPlayers = elements.filter(element => element.attributes.team === team).map(player => player.attributes.number);
+  let player = 0;
+  for(let i = 1; i <= 5; i++){
+    if(!teamPlayers.includes(i)){
+      player = i;
+      break;
+    }
+  }
+  return player;
+}
 
 export default function Board(props) {
   const { selectedItem, tacticGroup, tacticSequence } = props;
 
   const [arrows, setArrows] = useState([]);
-  const [elementsMap, setElementsMap] = useState({});
+  const [arrowsMenuOpen, setArrowsMenuOpen] = useState(Infinity);
   const container = useRef();
 
   /* Fixed board size 60 columns and 40 rows */
   const rows = useMemo(() => setDimensions(boardConfig.ROWS),[]);
   const columns = useMemo(() => setDimensions(boardConfig.COLUMNS),[]);
 
-  const elements = tacticGroup.tactics[tacticSequence].elements; 
+  const elements = tacticGroup.tactics[tacticSequence].elements;
   const elementsPosition = getOccupiedPositions(elements);
 
   const totalElementsOnBoard = {
@@ -35,6 +47,7 @@ export default function Board(props) {
       team2: elements.length > 0 ? elements.filter(element => element.attributes.team === 'team2').length : 0,
       ball: elements.length > 0 ? elements.filter(element => element.attributes.team === 'ball').length : 0
   };
+
 
   useEffect(() => {
     cleanDragStyle();
@@ -46,7 +59,7 @@ export default function Board(props) {
       elements.forEach(element => {
         let elem = container.current.querySelector(`.spot #row${element.position.y}col${element.position.x}`);
         let rect = elem.getBoundingClientRect();
-        if(element.attributes.arrow !== 0){
+        if(element.attributes.arrow !== null){
           const {source, destination} = buildArrow(rect.x, rect.y, element.attributes.arrow);
           const arrow = arrowLine({x:source.x, y:source.y}, {x:destination.x, y:destination.y}, 
             { color: '#d3d3d3', style: 'dash', curvature: 0,
@@ -101,11 +114,11 @@ export default function Board(props) {
 
     const element = {
       id: positionIndex,
-      type: selectedItem === 'ball' ? 'ball' : 'player',
+      type: selectedItem === 'ball' ? 1 : 0,
       attributes: {
         team: selectedItem,
-        number: totalElementsOnBoard[selectedItem] + 1,
-        arrow: 0
+        number: selectedItem === 'ball' ? 0 : getHighestPlayerNumber(selectedItem, elements),
+        arrow: null
       },
       index: positionIndex,
       position: {
@@ -114,14 +127,6 @@ export default function Board(props) {
       }
     }
     props.onElementAdd(tacticSequence, element);
-
-    setElementsMap({
-      ...elementsMap,
-      [positionIndex]: {
-        ...elementsMap[positionIndex],
-        show: false
-      }
-    });
   }
 
   const handleElementDrop = (result) => {
@@ -150,18 +155,21 @@ export default function Board(props) {
   const handleElementClick = (row, col) => {
     const positionIndex = getPostionFromXY(col,row)[0];
 
-    const getSubMap = () => {
-      let subMap = {};
+    const elementOnBoard = elements.find(element => {
+      return element.index === positionIndex;
+    });
 
-      for(const key in elementsMap){
-        const showValue = elementsMap[key].show;
-        subMap = {...subMap, [key]:{show: !showValue && key === positionIndex+'' ? true : false}};
-      }
-
-      return subMap;
+    // Check if the selected element is the ball
+    if(elementOnBoard.type === 1){
+      return;
     }
 
-    setElementsMap(getSubMap());
+
+    if(arrowsMenuOpen === positionIndex){
+      setArrowsMenuOpen(Infinity);  
+    }else{
+      setArrowsMenuOpen(positionIndex);
+    }
   }
 
   const handleArrowClick = (selection, row, col) => {
@@ -170,13 +178,8 @@ export default function Board(props) {
       return element.index === positionIndex;
     });
 
-    setElementsMap({
-      ...elementsMap,
-      [positionIndex]: {
-        ...elementsMap[positionIndex],
-        show: false
-      }
-    });
+    setArrowsMenuOpen(Infinity);
+
     if(elementOnBoard.attributes.arrow === selection){
       props.onArrowRemove(positionIndex);
       return;
@@ -190,7 +193,7 @@ export default function Board(props) {
     const index = getPostionFromXY(x, y)[0];
 
     const arrowElements = elements.filter(element => {
-      return element.attributes.arrow !== 0;
+      return element.attributes.arrow !== null;
     });
 
     const arrowIndex = arrowElements.findIndex(arrowElement => {
@@ -217,7 +220,8 @@ export default function Board(props) {
       return element.index === positionIndex;
     });
 
-    return `${styles.player} ${styles[elementOnBoard.attributes.team]}`;
+    return `${styles.player} ${elementOnBoard.type === 1 ? 
+      styles.ball : styles[elementOnBoard.attributes.team]}`;
   }
 
   const getElementNumber = (row, col) => {
@@ -226,7 +230,8 @@ export default function Board(props) {
       return element.index === positionIndex;
     });
 
-    if (elementOnBoard.type === 'ball') {
+    //If the selected element is the ball
+    if (elementOnBoard.type === 1) {
       return;
     }
 
@@ -235,7 +240,7 @@ export default function Board(props) {
 
   const getElementShow = (row, col) => {
     const positionIndex = getPostionFromXY(col,row)[0];
-    return elementsMap[positionIndex] ? elementsMap[positionIndex].show : false;
+    return arrowsMenuOpen === positionIndex;
   }
 
   const getElement = (row, col) => {
@@ -255,6 +260,8 @@ export default function Board(props) {
                 {columns.map(col => (
                   <Draggable key={`col${col}`} draggableId={`row${row}col${col}`} index={col} isDragDisabled={!isElementOnSpot(row,col)}>
                     {(draggableProvided, snapshot) => (
+                      <>
+                      {snapshot.isDragging && <div style={{width:'40px', height:'40px'}}></div>}
                       <div className={`spot ${styles.spot}`}
                         onClick={() => handleBoardClick(row,col)}
                         ref={draggableProvided.innerRef}
@@ -275,6 +282,7 @@ export default function Board(props) {
                         </div>
                       }
                       </div>
+                      </>
                     )}
                   </Draggable>
                 ))}
