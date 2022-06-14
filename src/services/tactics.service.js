@@ -1,11 +1,16 @@
 import axios from "axios";
+import { mockGroup1Data } from "../data/groupData";
+
+const getMockGroup = () => {
+  return mockGroup1Data;
+}
 
 const getTacticGroups = () => {
   return axios.get('http://localhost:8000/tactic')
 }
 
 const getTacticGroup = (tacticGroupId) => {
-  return axios.get(`http://localhost:8000/tactic/${tacticGroupId}`)
+    return axios.get(`http://localhost:8000/tactic/${tacticGroupId}`)
 }
 
 const saveTacticGroup = (tacticGroup) => {
@@ -17,6 +22,7 @@ const updateTacticGroup = (tacticGroupId, tacticGroup) => {
 }
 
 export {
+  getMockGroup,
   getTacticGroups,
   getTacticGroup,
   saveTacticGroup,

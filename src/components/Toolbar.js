@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Icon from './UI/Icon';
+import EditableInput from './UI/EditableInput';
 import ball from '../assets/images/ball.png';
 import styles from './Toolbar.module.css';
 import { getTacticGroups } from '../services/tactics.service';
 
 export default function Toolbar(props) {
-  const {selectedItem, tacticGroupName} = props;
+  const {selectedItem, tacticGroupName, unsavedTactic} = props;
   const [savedTactics, setSaveTactics] = useState([]);
 
   useEffect(() => {
@@ -18,10 +19,6 @@ export default function Toolbar(props) {
           {
             name: "Group 1",
             _id: "A1"
-          },
-          {
-            name: "Group 2",
-            _id: "A2"
           }
         ];
         setSaveTactics(fetchTactics);
@@ -36,6 +33,10 @@ export default function Toolbar(props) {
     props.onResetClick();
   }
 
+  const handleTitleSave = (newTitle) => {
+    props.onSaveNewName(newTitle);
+  }
+
   const handleTacticClick = (tacticId) => {
     props.onTacticClick(tacticId);
   }
@@ -48,7 +49,7 @@ export default function Toolbar(props) {
     <div className={styles.toolbar}>
       <ul>
         <li>
-          <h3>Soccer Manager</h3>
+          <h1>Soccer Manager</h1>
         </li>
         <li>
           <button className={`${styles.toolbarBtn} ${selectedItem === 'team1' ? `${styles.active} ${styles.activeBlue}` : ''}`} 
@@ -78,13 +79,13 @@ export default function Toolbar(props) {
 
       <ul className={styles.menu}>
         <li>
-          <h4 className={`${tacticGroupName === 'Untitled' ? styles.unsaved : ''}`}>
+          <EditableInput changeIndicator={unsavedTactic}
+                        onSave={handleTitleSave}>
             {tacticGroupName}
-            <span>*</span>
-          </h4>
+          </EditableInput>
         </li>
         <li>
-          <button className={styles.toolbarBtn} title="Save"
+          <button className={styles.toolbarBtn} disabled={props.isSaving} title="Save"
             onClick={() => handleSaveTacticClick()}>
             <Icon type="save" color="black" />
           </button>
@@ -97,7 +98,7 @@ export default function Toolbar(props) {
             <div className={styles.dropdownContent}>
               <button className={styles.toolbarBtn}
                 onClick={() => handleTacticClick()}>
-                  <i>Untitled</i>
+                  <i>Create New Tactic</i>
               </button>
               {savedTactics.map(tactic => (
                 <button key={tactic._id} className={styles.toolbarBtn}

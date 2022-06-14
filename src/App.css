@@ -41,3 +41,19 @@ img.field {
   object-fit: cover;
   object-position: center;
 }
+
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  backdrop-filter: blur( 1px );
+  -webkit-backdrop-filter: blur( 1px );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: default !important;
+  color: var(--bg-secondary-hover);
+  z-index: 1001;
+}

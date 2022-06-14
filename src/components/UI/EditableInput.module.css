@@ -1,0 +1,29 @@
+.editableInput {
+  padding: 5px 0;
+  font-size: 14px;
+  border: solid transparent;
+  border-width: 1px;
+}
+
+.editableInput:hover {
+  border: 1px solid var(--bg-light-gray);
+}
+
+.plaintext {
+  color: var(--bg-primary);
+  background-color: transparent;
+}
+
+.inputBtn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.inputBtn:hover {
+  font-weight: bold;
+}
+
+.unsaved {
+  font-style: italic;
+}
